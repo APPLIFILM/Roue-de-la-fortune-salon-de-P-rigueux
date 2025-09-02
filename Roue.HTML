@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Roue de la Fortune - Films Solaires</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; background: #fdf6e3; }
+  h1 { color: #e67e22; }
+  input, button { padding: 10px; margin: 5px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+  #spinBtn { background: #3498db; color: #fff; border: none; cursor: pointer; }
+  #wheelCanvas { margin-top: 20px; }
+  #result { margin-top: 20px; font-size: 20px; color: #2c3e50; }
+</style>
+</head>
+<body>
+
+<h1>🎉 Tournez la roue et gagnez ! 🎉</h1>
+
+<div id="formDiv">
+  <p>Remplissez vos informations pour participer :</p>
+  <input type="text" id="name" placeholder="Nom" required><br>
+  <input type="email" id="email" placeholder="Email" required><br>
+  <input type="text" id="building" placeholder="Type de bâtiment" required><br>
+  <button id="startBtn">Commencer</button>
+</div>
+
+<canvas id="wheelCanvas" width="400" height="400" style="display:none;"></canvas>
+<button id="spinBtn" style="display:none;">Tourner la roue</button>
+<div id="result"></div>
+
+<script>
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const segments = ["Échantillon film solaire", "Consultation gratuite", "Lunettes anti-UV"];
+const colors = ["#f39c12","#3498db","#2ecc71"];
+const center = canvas.width / 2;
+const radius = center;
+let angle = 0;
+let spinning = false;
+
+// Afficher la roue
+function drawWheel() {
+    const segAngle = 2 * Math.PI / segments.length;
+    for(let i=0;i<segments.length;i++){
+        ctx.beginPath();
+        ctx.moveTo(center,center);
+        ctx.arc(center,center,radius,i*segAngle,(i+1)*segAngle);
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        ctx.save();
+        ctx.translate(center,center);
+        ctx.rotate(i*segAngle + segAngle/2);
+        ctx.textAlign="right";
+        ctx.fillStyle="#fff";
+        ctx.font="16px Arial";
+        ctx.fillText(segments[i], radius-10,5);
+        ctx.restore();
+    }
+}
+
+// Roue animée
+function spinWheel() {
+    if(spinning) return;
+    spinning = true;
+    let spins = Math.floor(Math.random()*3 + 3);
+    let finalAngle = Math.random()*2*Math.PI;
+    let totalRotation = spins*2*Math.PI + finalAngle;
+    let currentRotation = 0;
+    const speed = 0.05;
+
+    function animate(){
+        if(currentRotation<totalRotation){
+            angle+=speed;
+            currentRotation+=speed;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.save();
+            ctx.translate(center,center);
+            ctx.rotate(angle);
+            ctx.translate(-center,-center);
+            drawWheel();
+            ctx.restore();
+            requestAnimationFrame(animate);
+        } else {
+            spinning=false;
+            const segAngle = 2 * Math.PI / segments.length;
+            const winningIndex = segments.length - Math.floor(((angle % (2*Math.PI)) / segAngle)) - 1;
+            document.getElementById('result').innerText = "🎁 Vous avez gagné : " + segments[winningIndex] + " !";
+        }
+    }
+    animate();
+}
+
+// Formulaire avant la roue
+document.getElementById('startBtn').addEventListener('click', () => {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const building = document.getElementById('building').value.trim();
+    if(!name || !email || !building){
+        alert("Veuillez remplir tous les champs !");
+        return;
+    }
+
+    // Ici tu peux ajouter du code pour enregistrer les leads dans Google Sheets ou Mailchimp
+    console.log("Lead enregistré :", {name,email,building});
+
+    document.getElementById('formDiv').style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('spinBtn').style.display = 'inline-block';
+    drawWheel();
+});
+
+document.getElementById('spinBtn').addEventListener('click', spinWheel);
+</script>
+
+</body>
+</html>
